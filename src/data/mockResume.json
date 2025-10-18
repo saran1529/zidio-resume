@@ -1,0 +1,31 @@
+{
+    "name": "Megalathan S",
+    "title": "Frontend Developer",
+    "contact": {
+        "email": "saransmb2@gmail.com",
+        "phone": "+91 6380580727",
+        "location": "Oddanchatram, Tamilnadu"
+    },
+    "summary": "Passionate frontend developer building responsive web apps with React. Strong in HTML, CSS, JS and UI/UX.",
+    "skills": [
+        "React",
+        "JavaScript",
+        "HTML",
+        "CSS",
+        "Tailwind"
+    ],
+    "education": [
+        {
+            "degree": "B.E. Mechanical Engineering",
+            "institution": "Christian College Of Engg and Tech",
+            "Year": "2022"
+        }
+    ],
+    "projects": [
+        {
+            "name": "Zidio Job Portal",
+            "desc": "Built front-end components and integrated with mock APIs.",
+            "link": "https://github.com/saran1529"
+        }
+    ]
+}
