@@ -42,8 +42,8 @@ export default function App() {
       </div>
 
       {/* Footer */}
-      <footer className=" w-full bg-gray-100 text-gray-600 text-center py-4 border-t border-gray-300 text-sm">
-        © 2025 Resume Editor. Build and download your professional resume easily. <br />Need help? Contact us at <a href="mailto:support@resumeeditor.com" className="text-blue-600 hover:underline">support@resumeeditor.com</a>
+      <footer className=" w-full bg-gray-100 text-gray-600 text-center py-2 border-t-2 border-gray-300 text-sm">
+        © 2025 Resume Editor. <br />Need help? Contact us at <a href="mailto:support@resumeeditor.com" className="text-blue-600 hover:underline">support@resumeeditor.com</a>
       </footer>
     </div>
   );
