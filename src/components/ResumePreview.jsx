@@ -15,54 +15,119 @@ const ResumePreview = forwardRef(({ resume }, ref) => {
                 return;
             }
 
-            // Capture DOM as image
+            // Temporarily fix element width for A4 capture
+            const originalWidth = element.style.width;
+            const originalTransform = element.style.transform;
+            element.style.width = "794px"; // A4 width in pixels
+            element.style.transform = "scale(1)";
+
+            // Wait for layout update
+            await new Promise((resolve) => setTimeout(resolve, 300));
+
+            // --- Mobile-only fix for icon vertical alignment + larger icon size ---
+            if (window.innerWidth < 768) {
+                element.querySelectorAll(".resume-icon").forEach(icon => {
+                    icon.style.transform = "translateY(-1px)";
+                    icon.style.fontSize = "25px"; // force larger icon size for PDF capture
+                    icon.style.width = "22px";   // ensure proper render in html2canvas
+                    icon.style.height = "25px";
+                });
+            }
+
+
+            // Capture resume as canvas
             const canvas = await html2canvas(element, {
-                scale: 2,
+                scale: window.devicePixelRatio > 1 ? 2 : 1.5,
                 useCORS: true,
                 backgroundColor: "#ffffff",
                 logging: false,
+                scrollX: 0,
+                scrollY: 0,
                 windowWidth: element.scrollWidth,
                 windowHeight: element.scrollHeight,
             });
 
-            // Convert to image data
             const imgData = canvas.toDataURL("image/png");
             const pdf = new jsPDF("p", "mm", "a4");
-
             const pdfWidth = pdf.internal.pageSize.getWidth();
             const pdfHeight = pdf.internal.pageSize.getHeight();
-            const imgProps = { width: canvas.width, height: canvas.height };
-            const imgHeight = (imgProps.height * pdfWidth) / imgProps.width;
 
-            // Add the image to PDF
-            pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, imgHeight);
+            // Convert px to mm
+            const imgWidth = canvas.width;
+            const imgHeight = canvas.height;
+            const pageHeightInPx = (pdfHeight * imgWidth) / pdfWidth;
 
-            // Convert screen pixels to PDF mm coordinates
+            let heightLeft = imgHeight;
+            let position = 0;
+
+            // Add multiple pages if content is long
+            while (heightLeft > 0) {
+                const pageCanvas = document.createElement("canvas");
+                pageCanvas.width = imgWidth;
+                pageCanvas.height = Math.min(pageHeightInPx, heightLeft);
+                const ctx = pageCanvas.getContext("2d");
+
+                ctx.drawImage(
+                    canvas,
+                    0,
+                    position,
+                    imgWidth,
+                    pageCanvas.height,
+                    0,
+                    0,
+                    imgWidth,
+                    pageCanvas.height
+                );
+
+                const pageData = pageCanvas.toDataURL("image/png");
+                const pageHeight = (pageCanvas.height * pdfWidth) / imgWidth;
+
+                if (position === 0) {
+                    pdf.addImage(pageData, "PNG", 0, 0, pdfWidth, pageHeight);
+                } else {
+                    pdf.addPage();
+                    pdf.addImage(pageData, "PNG", 0, 0, pdfWidth, pageHeight);
+                }
+
+                heightLeft -= pageHeightInPx;
+                position += pageHeightInPx;
+            }
+
+            // Add clickable links
             const rect = element.getBoundingClientRect();
             const pxToMm = pdfWidth / rect.width;
 
-            // Add clickable links manually
             const links = element.querySelectorAll("a[href]");
-            links.forEach(link => {
+            links.forEach((link) => {
                 const href = link.getAttribute("href");
                 if (!href) return;
 
                 const linkRect = link.getBoundingClientRect();
-
-                // Calculate position in PDF
                 const x = (linkRect.left - rect.left) * pxToMm;
                 const y = (linkRect.top - rect.top) * pxToMm;
                 const w = linkRect.width * pxToMm;
                 const h = linkRect.height * pxToMm;
-
-                // Adjust Y-position slightly to align clickable area with rendered text
-                const offsetY = 7;
-                pdf.link(x, y + offsetY, w, h, { url: href });
+                pdf.link(x, y + 7, w, h, { url: href });
             });
 
-            // Save PDF
             pdf.save("My_Resume.pdf");
-        },
+
+            // Restore original style
+            element.style.width = originalWidth;
+            element.style.transform = originalTransform;
+
+            // --- Restore icon styles (mobile only) ---
+            if (window.innerWidth < 768) {
+                element.querySelectorAll(".resume-icon").forEach(icon => {
+                    icon.style.transform = "";
+                    icon.style.fontSize = "";
+                    icon.style.width = "";
+                    icon.style.height = "";
+                });
+            }
+
+        }
+
     }));
 
 
